@@ -18,48 +18,48 @@
 #define OPERATION_MULTIPLY 2
 
 typedef struct {
-	int type;
-	void* data;
+    int type;
+    void* data;
 } Value;
 
 typedef struct Node
 {
-	Value* value;
-	struct Node* next;
+    Value* value;
+    struct Node* next;
 } Node;
 
 typedef struct
 {
-	int length;
-	struct Node* first;
-	struct Node* last;
+    int length;
+    struct Node* first;
+    struct Node* last;
 } List;
 
 typedef struct {
-	int type;
-	List* environment;
-	List* free_variables;
-	void* code;
+    int type;
+    List* environment;
+    List* free_variables;
+    void* code;
 } Procedure;
 
 typedef struct {
-	char* symbol;
-	Value* value;
+    char* symbol;
+    Value* value;
 } Binding;
 
 typedef struct {
-	Value* car;
-	Value* cdr;
+    Value* car;
+    Value* cdr;
 } Cons;
 
 
 // for operator handling
 
 typedef struct {
-	char* name;
-	int num_arguments;
-	List* argument_flags;
-	Value* (*function) (List*, List*);
+    char* name;
+    int num_arguments;
+    List* argument_flags;
+    Value* (*function) (List*, List*);
 } Operator;
 
 int compare_values(Value*, Value*); 
