@@ -1,6 +1,7 @@
-#include "lisp.h"
 #include <stdio.h>
 #include <string.h>
+#include "lisp.h"
+#include "list.h"
 
 void value_print(Value* value)
 {

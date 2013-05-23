@@ -1,0 +1,10 @@
+Value* operator_if(List*, List*);
+Value* operator_define(List*, List*);
+Value* operator_set(List*, List*);
+Value* operator_quote(List*, List*);
+Value* operator_lambda(List*, List*);
+Value* operator_let(List*, List*);
+Value* operator_prog(List*, List*);
+Value* operator_cond(List*, List*);
+Value* operator_eval(List*, List*);
+Value* apply_operator(Operator*, List*, List*);

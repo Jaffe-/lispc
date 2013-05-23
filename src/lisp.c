@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "lisp.h"
+#include "list.h"
+#include "operators.h"
 
 int compare_values(Value* a, Value* b) 
 {
@@ -31,16 +33,6 @@ int compare_values(Value* a, Value* b)
     return 0;
 }	
 
-int list_find(List* list, Value* item)
-{
-    Node* current = list->first;
-    for (int i = 0; i < list->length; i++) {
-	if (compare_values(current->value, item)) return i;
-	current = current->next;
-    }
-    return 0;
-}
-
 Value* environment_lookup(List* environment, char* name)
 {
     Node* current = environment->first;
@@ -64,39 +56,6 @@ int* allocate_integer(int value)
     return integer;
 }
 
-void list_copy_new(List* dest, List* source) 
-{
-    Node* current = source->first;
-    for (int i = 0; i < source->length; i++) {
-	if (!list_find(dest, current->value))
-	    list_append(dest, current->value);
-	current = current->next;
-    }
-}
-
-void list_append(List* list, Value* new_item)
-{
-    Node* new = (Node*)malloc(sizeof(Node));
-    new->value = (Value*)malloc(sizeof(Value));
-    new->value->type = new_item->type;
-    new->value->data = new_item->data;
-    new->next = NULL;
-    if (list->length == 0) 
-	list->first = new;
-    else
-	list->last->next = new;
-    list->last = new;
-    list->length++;
-}
-
-List* make_list() 
-{
-    List* list = (List*)malloc(sizeof(List));
-    list->length = 0;
-    list->first = NULL;
-    list->last = NULL;
-    return list;
-}
 
 Cons* make_cons(Value* car, Value* cdr)
 {
@@ -174,19 +133,16 @@ Value* eval(Value* expression, List* environment)
 	    return expression;
 	if (list->first->value->type == TYPE_SYMBOL) { 
 	    char* symbol = (char*)list->first->value->data;
-	    Node* current = operators->first;
-      
-	    // check for operator match
-	    for (int i = 0; i < operators->length; i++) {
-		Operator* operator = (Operator*)current->value->data;
-		if (!strcmp(operator->name, symbol)) {	
+	   
+	    // check for operator match	    
+	    for (int i = 0; i < num_operators; i++) {
+		if (!strcmp(operators[i].name, symbol)) {	
 		    List* arguments = make_list();
 		    arguments->length = list->length - 1;
 		    arguments->first = list->first->next;
 		    arguments->last = list->last;
-		    return apply_operator(operator, arguments, environment);
+		    return apply_operator(&operators[i], arguments, environment);
 		}
-		current = current->next;
 	    }	
 	}
     
@@ -216,8 +172,7 @@ void test_repl()
 {
     char expression[1000];
     List* env = setup_environment();
-    operators = make_operator_list();
-  
+
     Value* result;
     while(1) {
 	printf("LISP> ");

@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "lisp.h"
+#include "list.h"
 
 int check_number(char* str) 
 {

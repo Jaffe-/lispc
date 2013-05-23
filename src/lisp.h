@@ -58,16 +58,12 @@ typedef struct {
 typedef struct {
     char* name;
     int num_arguments;
-    List* argument_flags;
+    char argument_flags[3];
     Value* (*function) (List*, List*);
 } Operator;
 
 int compare_values(Value*, Value*); 
-int list_find(List*, Value*);
 Value* environment_lookup(List*, char*);
-void list_copy_new(List*, List*);
-void list_append(List*, Value*);
-List* make_list();
 Cons* make_cons(Value*, Value*);
 Value* make_value(int, void*);
 Binding* make_binding(Value*, Value*);
@@ -86,31 +82,8 @@ char* string_uppercase(char*);
 Value* parse_string(char*);
 void list_append_parsed_string(List*, char*, int, int);
 List* parse_list_string(char*);
-Procedure* make_primitive_procedure(Value* (*) (List*), int);
-void append_primtive_procedure(List*, char*, int num_args, Value* (*) (List*));
-Value* primitive_plus(List*);
-Value* primitive_eq(List*);
-Value* primitive_cons(List*);
-Value* primitive_car(List*);
-Value* primitive_cdr(List*);
-Value* primitive_list(List*);
-Value* primitive_mod(List*);
-Value* primitive_print(List*);
-List* make_operator_list();
-Value* apply_operator(Operator*, List*, List*);
-void operator_list_append(List*, char*, Value* (*)(List*, List*), int, ...);
-Value* operator_if(List*, List*);
-Value* operator_define(List*, List*);
-Value* operator_set(List*, List*);
-Value* operator_quote(List*, List*);
-Value* operator_lambda(List*, List*);
-Value* operator_let(List*, List*);
-Value* operator_prog(List*, List*);
-Value* operator_cond(List*, List*);
-Value* operator_eval(List*, List*);
-Value* apply_arithmetic_primitive(List*, int);
-Value* primitive_minus(List*);
-Value* primitive_multiply(List*);
 int* allocate_integer(int);
 
-List* operators;
+#define num_operators 9
+
+extern Operator operators[];

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lisp.h"
+#include "list.h"
+#include "primitives.h"
 
 Procedure* make_primitive_procedure(Value* (*code) (List*), int num_args)
 {

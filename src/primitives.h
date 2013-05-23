@@ -1,0 +1,13 @@
+Procedure* make_primitive_procedure(Value* (*) (List*), int);
+void append_primtive_procedure(List*, char*, int num_args, Value* (*) (List*));
+Value* primitive_plus(List*);
+Value* primitive_eq(List*);
+Value* primitive_cons(List*);
+Value* primitive_car(List*);
+Value* primitive_cdr(List*);
+Value* primitive_list(List*);
+Value* primitive_mod(List*);
+Value* primitive_print(List*);
+Value* apply_arithmetic_primitive(List*, int);
+Value* primitive_minus(List*);
+Value* primitive_multiply(List*);

@@ -2,58 +2,39 @@
 #include <stdlib.h>
 #include <string.h>
 #include "lisp.h"
+#include "list.h"
+#include "operators.h"
 
-List* make_operator_list()
-{
-    List* list = make_list();
-
-    operator_list_append(list, "IF", &operator_if, 3, EVAL, NO_EVAL, NO_EVAL);
-    operator_list_append(list, "QUOTE", &operator_quote, 1, NO_EVAL);
-    operator_list_append(list, "DEFINE", &operator_define, 2, NO_EVAL, EVAL);
-    operator_list_append(list, "LAMBDA", &operator_lambda, 2, NO_EVAL, NO_EVAL);
-    operator_list_append(list, "SET", &operator_set, 2, NO_EVAL, EVAL);
-    operator_list_append(list, "LET", &operator_let, 2, NO_EVAL, NO_EVAL);
-    operator_list_append(list, "PROG", &operator_prog, 0);
-    operator_list_append(list, "COND", &operator_cond, 0);
-    operator_list_append(list, "EVAL", &operator_eval, 1, EVAL);
-    return list;
-}
+Operator operators[] = {
+    {"IF", 3, {EVAL, NO_EVAL, NO_EVAL}, &operator_if},
+    {"QUOTE", 1, {NO_EVAL}, &operator_quote},
+    {"DEFINE", 2, {NO_EVAL, EVAL}, &operator_define},
+    {"\\", 2, {NO_EVAL, NO_EVAL}, &operator_lambda},
+    {"SET", 2, {NO_EVAL, EVAL}, &operator_set},
+    {"LET", 2, {NO_EVAL, NO_EVAL}, &operator_let},
+    {"PROG", 0, {}, &operator_prog},
+    {"COND", 0, {}, &operator_cond},
+    {"EVAL", 1, {EVAL}, &operator_eval}
+};
 
 Value* apply_operator(Operator* operator, List* arguments, List* environment)
 {
     Node* current_arg = arguments->first;
-    Node* current_flag = operator->argument_flags->first;
     List* evaluated_args = make_list();
     if (operator->num_arguments != 0 && operator->num_arguments != arguments->length) 
 	return make_value(TYPE_ERROR, "wrong number of arguments for operator");
     for (int i = 0; i < arguments->length; i++) {
 	Value* result = current_arg->value;
 	if (operator->num_arguments != 0) { 
-	    if (*(int*)current_flag->value->data == EVAL) {	
+	    if ((operator->argument_flags)[i] == EVAL) {	
 		result = eval(current_arg->value, environment);
 		if (result->type == TYPE_ERROR) return result;
 	    }
-	    current_flag = current_flag->next;
 	}	
 	list_append(evaluated_args, result);
 	current_arg = current_arg->next;
     }
     return operator->function(evaluated_args, environment);
-}
-
-void operator_list_append(List* list, char* name, Value* (*code)(List*, List*), int num_args, ...)
-{
-    va_list args;
-    Operator* operator = (Operator*)malloc(sizeof(Operator));
-	
-    operator->name = name;
-    operator->num_arguments = num_args;
-    operator->function = code;
-    operator->argument_flags = make_list();
-    va_start(args, num_args);
-    for (int i = 0; i < num_args; i++) 
-	list_append(operator->argument_flags, make_value(TYPE_NUMBER, allocate_integer(va_arg(args, int))));
-    list_append(list, make_value(TYPE_OPERATOR, operator));
 }
 
 Value* operator_if(List* arguments, List* environment)
@@ -183,3 +164,4 @@ Value* operator_eval(List* arguments, List* environment)
 {
     return arguments->first->value;	
 }
+
