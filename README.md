@@ -35,8 +35,15 @@ lispc is a minimalistic Lisp language. Expressions in lispc are either symbols, 
 
 #### `set`
 
-`(set a b)` changes the value of the variable `a` refers to `b`.
+`(set a b)` changes the value of the variable `a` refers to, to `b`.
 
 #### `let`
 
 `(let ((a1 b1) (a2 b2) ...) exp)` introduces *local bindings* of the symbol `a1` to the symbol `b1`, the symbol `a2` to the symbol `b2`, and so on. With these bindings, the `exp` expression is evaluated. The bindings cease to exist outside of the `let` form.
+
+#### `do`
+
+`(do exp1 exp2 ...)` evaluates `exp1`, `exp2` and so on, and uses the last evaluated value as its value. 
+
+### Primitives
+
