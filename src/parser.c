@@ -48,20 +48,20 @@ Value* parse_string(char* string)
 {
     Value* value;
     if (check_quote(string)) {
-	List* quote_exp = make_list();
-	list_append(quote_exp, make_value(TYPE_SYMBOL, "QUOTE"));
+	List* quote_exp = alloc_list();
+	list_append(quote_exp, alloc_value(TYPE_SYMBOL, "'"));
 	list_append(quote_exp, parse_string(string+1));
-	value = make_value(TYPE_LIST, quote_exp);
+	value = alloc_value(TYPE_LIST, quote_exp);
     }
     else if (check_number(string)) 
-	value = make_value(TYPE_NUMBER, allocate_integer(atoi(string)));	
+	value = alloc_value(TYPE_INTEGER, allocate_integer(atoi(string)));	
     else if (check_symbol(string)) 
-	value = make_value(TYPE_SYMBOL, string_uppercase(string));
+	value = alloc_value(TYPE_SYMBOL, string_uppercase(string));
     else if (check_list(string))
-	value = make_value(TYPE_LIST, parse_list_string(string));
+	value = alloc_value(TYPE_LIST, parse_list_string(string));
 
     else
-	value = make_value(TYPE_ERROR, "Parse error!");		
+	value = alloc_value(TYPE_ERROR, "Parse error!");		
     return value;
 }
 
@@ -74,7 +74,7 @@ void list_append_parsed_string(List* list, char* string, int start, int end)
 
 List* parse_list_string(char* string)
 {
-    List* expression = make_list();
+    List* expression = alloc_list();
     int length = strlen(string);
     int level = 0;
     int last_break = 1;

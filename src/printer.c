@@ -6,7 +6,7 @@
 void value_print(Value* value)
 {
     switch (value->type) {
-    case TYPE_NUMBER:
+    case TYPE_INTEGER:
 	printf("%i", *(int*)value->data);
 	break;
     case TYPE_SYMBOL:
@@ -18,34 +18,20 @@ void value_print(Value* value)
     case TYPE_ERROR:
 	printf("ERROR! %s", (char*)value->data);
 	break;
-    case TYPE_CONS:
+    case TYPE_LIST: 
     {
-	Cons* cons = (Cons*)value->data;
+	List* lst = (List*)value->data;
+	Node* current = lst->first;
 	printf("(");
-	if (cons->cdr->type == TYPE_CONS) list_print(cons);
-	else {
-	    value_print(cons->car);
-	    printf(" . ");
-	    value_print(cons->cdr);
+	for (int i = 0; i < lst->length; i++) {
+	    value_print(current->value);
+	    if (i < lst->length - 1) 
+		printf(" ");
+	    current = current->next;
 	}
+	printf(")");
+	break;
     }
-    printf(")");
-    break;
-    }
-}
-
-void list_print(Cons* list)
-{
-    while (list->cdr->type == TYPE_CONS) {
-	value_print(list->car);
-	printf(" ");
-	list = list->cdr->data;
-    } 
-    value_print(list->car);
-    if (!(list->cdr->type == TYPE_SYMBOL && !strcmp(list->cdr->data, "NIL"))) {
-	printf(" . ");
-	value_print(list->cdr);
     }
 }
-
 

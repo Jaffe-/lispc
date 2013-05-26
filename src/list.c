@@ -2,13 +2,24 @@
 #include "lisp.h"
 #include "list.h"
 
-List* make_list() 
+List* alloc_list() 
 {
     List* list = (List*)malloc(sizeof(List));
     list->length = 0;
     list->first = NULL;
     list->last = NULL;
     return list;
+}
+
+List* list_copy(List* source)
+{
+    List* new = alloc_list();
+    Node* current = source->first;
+    for (int i = 0; i < source->length; i++) { 
+	list_append(new, current->value);
+	current = current->next;
+    }
+    return new;
 }
 
 void list_copy_new(List* dest, List* source) 
@@ -38,6 +49,7 @@ void list_append(List* list, Value* new_item)
 
 int list_find(List* list, Value* item)
 {
+    if (list->length == 0) return 0;
     Node* current = list->first;
     for (int i = 0; i < list->length; i++) {
 	if (compare_values(current->value, item)) return i;

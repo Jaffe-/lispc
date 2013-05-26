@@ -13,8 +13,8 @@ int compare_values(Value* a, Value* b)
     // Secondly, types have to match
     if (a->type == b->type)
 	switch (a->type) {
-
-	case TYPE_NUMBER:
+	    
+	case TYPE_INTEGER:
 	    return *(int*)a->data == *(int*)b->data;
 	case TYPE_SYMBOL:
 	    return (strcmp((char*)a->data, (char*)b->data) == 0);
@@ -24,11 +24,6 @@ int compare_values(Value* a, Value* b)
 	case TYPE_PROCEDURE:
 	    // Procedures are generally not equal
 	    return 0;
-	case TYPE_CONS:
-	    // Cons pairs are equal when both CARs and CDRs are equal:
-	    return 
-		compare_values(((Cons*)a->data)->car, ((Cons*)b->data)->car) &&
-		compare_values(((Cons*)a->data)->cdr, ((Cons*)b->data)->cdr);
 	}
     return 0;
 }	
@@ -46,7 +41,7 @@ Value* environment_lookup(List* environment, char* name)
     char* errorstring = (char*)malloc(sizeof(char) * (strlen(name) + 30));
     strcpy(errorstring, "unbound variable ");
     strcpy(errorstring + strlen(errorstring), name);
-    return make_value(TYPE_ERROR, errorstring);
+    return alloc_value(TYPE_ERROR, errorstring);
 }
 
 int* allocate_integer(int value)
@@ -56,16 +51,7 @@ int* allocate_integer(int value)
     return integer;
 }
 
-
-Cons* make_cons(Value* car, Value* cdr)
-{
-    Cons* cons = (Cons*)malloc(sizeof(Cons));
-    cons->car = car;
-    cons->cdr = cdr;
-    return cons;
-}
-
-Value* make_value(int type, void* data)
+Value* alloc_value(int type, void* data)
 {
     Value* value = (Value*)malloc(sizeof(Value));
     value->type = type;
@@ -73,7 +59,7 @@ Value* make_value(int type, void* data)
     return value;
 }
 
-Binding* make_binding(Value* variable, Value* value)
+Binding* alloc_binding(Value* variable, Value* value)
 {
     Binding* binding = (Binding*)malloc(sizeof(Binding));
     binding->symbol = variable->data;
@@ -83,20 +69,20 @@ Binding* make_binding(Value* variable, Value* value)
     return binding;
 }
 
-List* make_binding_list(List* variables, List* values)
+List* alloc_binding_list(List* variables, List* values)
 {
-    List* binding_list = make_list();
+    List* binding_list = alloc_list();
     Node* current_variable = variables->first;
     Node* current_value = values->first;
     for (int i = 0; i < variables->length; i++) {
-	list_append(binding_list, make_value(TYPE_BINDING, make_binding(current_variable->value, current_value->value)));
+	list_append(binding_list, alloc_value(TYPE_BINDING, alloc_binding(current_variable->value, current_value->value)));
 	current_variable = current_variable->next;
 	current_value = current_value->next;
     }
     return binding_list;
 }
 
-Procedure* make_procedure(List* variables, Value* code, List* parent_environment)
+Procedure* alloc_procedure(List* variables, Value* code, List* parent_environment)
 {
     Procedure* procedure = (Procedure*)malloc(sizeof(Procedure));
     procedure->type = PROCEDURE_LAMBDA;
@@ -110,18 +96,18 @@ Value* apply(Procedure* procedure, List* arguments, List* environment)
 {
     if (procedure->type == PROCEDURE_LAMBDA || (procedure->type == PROCEDURE_PRIMITIVE && procedure->free_variables->length != 0)) 
 	if (procedure->free_variables->length != arguments->length) 
-	    return make_value(TYPE_ERROR, "procedure given wrong number of arguments");
+	    return alloc_value(TYPE_ERROR, "procedure given wrong number of arguments");
     if (procedure->type == PROCEDURE_PRIMITIVE) 
 	return ((Value* (*)(List*))procedure->code)(arguments);
-    List* new_environment  = make_binding_list(procedure->free_variables, arguments);
+    List* new_environment  = alloc_binding_list(procedure->free_variables, arguments);
     list_copy_new(new_environment, procedure->environment);
-    list_copy_new(new_environment, environment);
+    //list_copy_new(new_environment, environment);
     return eval(procedure->code, new_environment);
 }
 
 Value* eval(Value* expression, List* environment)
 {
-    if (expression->type == TYPE_NUMBER || expression->type == TYPE_ERROR) 
+    if (expression->type == TYPE_INTEGER || expression->type == TYPE_ERROR || expression->type == TYPE_PROCEDURE) 
 	return expression;
     if (expression->type == TYPE_SYMBOL && !strcmp(expression->data, "NIL")) 
 	return expression;
@@ -131,40 +117,45 @@ Value* eval(Value* expression, List* environment)
 	List* list = (List*)expression->data;
 	if (list->length == 0) 
 	    return expression;
+
+	// If the first element is a symbol, it might refer to an operator
 	if (list->first->value->type == TYPE_SYMBOL) { 
 	    char* symbol = (char*)list->first->value->data;
 	   
-	    // check for operator match	    
+	    // Check for operator match	    
 	    for (int i = 0; i < num_operators; i++) {
-		if (!strcmp(operators[i].name, symbol)) {	
-		    List* arguments = make_list();
-		    arguments->length = list->length - 1;
-		    arguments->first = list->first->next;
-		    arguments->last = list->last;
-		    return apply_operator(&operators[i], arguments, environment);
+		if (!strcmp(operators[i].name, symbol)) {
+
+		    // Call the operator
+		    List arguments;
+		    arguments.length = list->length - 1;
+		    arguments.first = list->first->next;
+		    arguments.last = list->last;
+		    return apply_operator(&operators[i], &arguments, environment);
 		}
-	    }	
-	}
-    
-	if (list->first->value->type == TYPE_PROCEDURE) {
-	    List* argument_list = make_list();
-	    argument_list->length = list->length - 1;
-	    argument_list->first = list->first->next;
-	    argument_list->last = list->last;
-	    return apply((Procedure*)(list->first->value->data), argument_list, environment);
-	}
-    
-	else { 
-	    List* evaluated_list = make_list(); 
-	    Node* current = list->first;
-	    for (int i = 0; i < list->length; i++) {
-		Value* element = eval(current->value, environment);
-		if (element->type == TYPE_ERROR) return element;
-		list_append(evaluated_list, element);
-		current = current->next;
 	    }
-	    return eval(make_value(TYPE_LIST, evaluated_list), environment);
 	}
+       
+	// If first element is not an operator, the list is a function call, and each element is evaluated:
+	List evaluated_list = {0, NULL, NULL}; 
+	Node* current = list->first;
+	for (int i = 0; i < list->length; i++) {
+	    Value* element = eval(current->value, environment);
+	    if (element->type == TYPE_ERROR) return element;
+	    list_append(&evaluated_list, element);
+	    current = current->next;
+	}
+
+	// If the first element evaluated to a procedure, apply the procedure to the arguments:
+	if (evaluated_list.first->value->type == TYPE_PROCEDURE) {
+	    List arguments;
+	    arguments.length = evaluated_list.length - 1;
+	    arguments.first = evaluated_list.first->next;
+	    arguments.last = evaluated_list.last;
+	    return apply((Procedure*)evaluated_list.first->value->data, &arguments, environment);
+	}
+	else 
+	    return alloc_value(TYPE_ERROR, "first element of list not operator or procedure");
     }
 }
 
