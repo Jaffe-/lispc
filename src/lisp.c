@@ -24,6 +24,21 @@ int compare_values(Value* a, Value* b)
 	case TYPE_PROCEDURE:
 	    // Procedures are generally not equal
 	    return 0;
+	case TYPE_LIST:
+	{
+	    List* lst_a = (List*)a->data;
+	    List* lst_b = (List*)b->data;
+	    if (lst_a->length != lst_b->length) return 0;
+	    Node* node_a = lst_a->first;
+	    Node* node_b = lst_b->first;
+	    for (int i = 0; i < lst_a->length; i++) {
+		if (!compare_values(node_a->value, node_b->value))
+		    return 0;
+		node_a = node_a->next;
+		node_b = node_b->next;
+	    }
+	    return 1;
+	}
 	}
     return 0;
 }	
@@ -161,14 +176,27 @@ Value* eval(Value* expression, List* environment)
 
 void test_repl()
 {
-    char expression[1000];
+    char expression[8000];
     List* env = setup_environment();
-
     Value* result;
+
+    FILE* file = fopen("stdlib.lisp", "r");
+    fseek(file, 0, SEEK_END);
+    int size = ftell(file);
+    rewind(file);
+    fread(expression, 1, size, file);
+    expression[size] = 0;
+    strip_spaces(expression);
+    printf("%s", expression);
+    result = eval(parse_string(expression), env);
+    value_print(result);
+    printf("\n");
+    
     while(1) {
 	printf("LISP> ");
 	if (!strcmp(fgets(expression, sizeof(expression), stdin), "QUIT\n")) break;
 	expression[strlen(expression) - 1] = 0;
+	strip_spaces(expression);
 	result = eval(parse_string(expression), env);
 	value_print(result);
 	printf("\n");

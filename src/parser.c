@@ -44,6 +44,24 @@ int check_quote(char* str)
     return *str == '\'';
 }
 
+void strip_spaces(char* string)
+{
+    int j = 0; int spaces = 0;
+    int length = strlen(string);
+    for (int i = 0; i < length; i++) {
+	if (string[i] != ' ' && string[i] != '\n' && string[i] != '\t') {
+	    spaces = 0;
+	    string[j++] = string[i];
+	}
+	else {
+	    spaces++;
+	    if (spaces == 1 && i > 1 && i < length - 2 && string[i-1] != '(' && string[i+1] != ')') 
+		string[j++] = ' ';
+	}
+    }
+    string[j] = 0;
+}
+
 Value* parse_string(char* string) 
 {
     Value* value;

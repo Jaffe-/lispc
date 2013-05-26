@@ -20,6 +20,7 @@ Value* primitive_lesseq(List*);
 Value* primitive_list(List*);
 Value* primitive_first(List*);
 Value* primitive_rest(List*);
+Value* primitive_push(List*);
 Value* primitive_mod(List*);
 Value* primitive_print(List*);
 Value* primitive_apply(List*);
@@ -54,6 +55,7 @@ List* setup_environment()
     append_primitive_procedure(env, "LIST", 0, &primitive_list);
     append_primitive_procedure(env, "FIRST", 1, &primitive_first);
     append_primitive_procedure(env, "REST", 1, &primitive_rest);
+    append_primitive_procedure(env, "PUSH", 2, &primitive_push);
     append_primitive_procedure(env, "%", 2, &primitive_mod);
     append_primitive_procedure(env, "PRINT", 1, &primitive_print);
     append_primitive_procedure(env, "APPLY", 2, &primitive_apply);
@@ -168,7 +170,7 @@ Value* primitive_rest(List* arguments)
 	alloc_value(TYPE_ERROR, "expects list");
     else {
 	List* lst = (List*)arg->data;
-	if (lst->length <= 1)
+	if (lst->length < 1)
 	    return arg;
 	else {
 	    List* rest_lst = alloc_list();
@@ -178,6 +180,24 @@ Value* primitive_rest(List* arguments)
 	    return alloc_value(TYPE_LIST, rest_lst);
 	}
     }
+}
+
+Value* primitive_push(List* arguments)
+{
+    Value* val = arguments->first->value;
+    Value* list = arguments->last->value;
+    
+    if (list->type != TYPE_LIST)
+	return alloc_value(TYPE_ERROR, "PUSH expects second argument to be a list.");
+    List* new_list = alloc_list();
+    List* old_lst = (List*)list->data;
+    Node* first_node = (Node*)malloc(sizeof(Node));
+    first_node->value = val;
+    first_node->next = old_lst->first;
+    new_list->length = old_lst->length + 1;
+    new_list->first = first_node;
+    new_list->last = old_lst->last;
+    return alloc_value(TYPE_LIST, new_list);
 }
 
 Value* primitive_apply(List* arguments)

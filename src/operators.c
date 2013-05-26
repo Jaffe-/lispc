@@ -173,7 +173,7 @@ Value* operator_cond(List* arguments, List* environment)
 	if (result->type == TYPE_ERROR) return result;
 	if (!(result->type == TYPE_SYMBOL && !strcmp(result->data, "NIL"))) {
 	    List prog_exp = {0, NULL, NULL};
-	    list_append(&prog_exp, alloc_value(TYPE_SYMBOL, "PROG"));
+	    list_append(&prog_exp, alloc_value(TYPE_SYMBOL, "DO"));
 	    prog_exp.first->next = clause->first->next;
 	    prog_exp.length = clause->length;	
 	    return eval(alloc_value(TYPE_LIST, &prog_exp), environment);
