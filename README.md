@@ -67,7 +67,7 @@ Example:
 
 #### `'` (quote)
 
-`(quote exp)` simply evaluates to `exp`. The parser will convert expressions of the form `'x` to `(' x)`.
+`(' exp)` simply evaluates to `exp`. The parser will convert expressions of the form `'x` to `(' x)`.
 
 Example:
 
@@ -95,11 +95,11 @@ Example:
 
 Example:
 
-    (do (print "hi")
-      (print "there") 
+    (do (print 'hi)
+      (print 'there) 
       1234)
 
-This will print "hi there" on the screen, and the expression will evaluate to 1234.
+This will print "HI THERE" on the screen, and the expression will evaluate to 1234.
 
 ### Primitives
 
