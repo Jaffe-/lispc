@@ -136,3 +136,26 @@ lispc does not support tail call optimization. A sometimes useful technique to d
                           (+ (fibc (- n 1)) (fibc (- n 2)))))))))
        (fibc n)))))
 ````
+
+### Generic functions
+
+The standard library defines the functions `new-generic` and `add-implementation` for using generic functions.
+
+`(new-generic name)` creates a new generic function called `name`.
+
+`(add-implementation name fn type)` defines a specific implementation of the generic function. `name` is the symbol of the generic function, `fn` is the implementing procedure, and `type` is a list or a symbol denoting the argument types the implementation handles. If `type` is a single symbol, the implementation is assumed to take a variable number of arguments, and every argument has to match this type. If `type` is a list, its items denote the argument types in order. 
+
+#### Example
+
+The function + might be useful to overload for certain types. The standard library implements + for integers as follows:
+
+    (new-generic '+)
+    (add-implementation '+ _+ 'integer)
+
+Here, `_+` denotes the built in primitive procedure for adding integers. The symbolic type argument makes this implementation accept a variable number of arguments, all of integer type. 
+
+To add a new implementation, for example for a type `matrix`, we can do
+
+    (add-implementation '+ add-matrix '(matrix matrix))
+    
+Here, the type argument is a list of two elements, meaning that this implementation will take two arguments, both of type `matrix`. The function `add-matrix` must be a function taking at least two such arguments.
