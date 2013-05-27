@@ -103,40 +103,6 @@ This will print "HI THERE" on the screen, and the expression will evaluate to 12
 
 ### Primitives
 
-### An example
-
-lispc does not support tail call optimization. A sometimes useful technique to do efficient recursion on trees, in absence of this, is to keep a dictionary of already calculated values. This examples shows how a function for calculating the nth Fibonacci number can be implemented in lispc:
-
-```
-(:
-  (def empty? (\ (x) (= x ())))
-  (def list? (\ (x) (= (type x) 'list)))
-  (def second (\ (x) (first (rest x))))
-
-  (def find-by (\ (f element lst)
-    (if (empty? lst)
-      nil
-      (if (= element (f (first lst)))
-        (first lst)
-        (find-by f element (rest lst))))))
-
-  (def fib (\ (n)
-    (: (def memo '((0 1) (1 1)))
-       (def memo-add! (\ (index value)
-         (: (set! memo (push (list index value) memo))
-            value)))
-
-       (def fibc (\ (n)
-         (let ((memo-val (find-by first n memo)))
-           (if memo-val
-             (second memo-val) 
-             (memo-add! n 
-                        (if (< n 2) 
-                          n
-                          (+ (fibc (- n 1)) (fibc (- n 2)))))))))
-       (fibc n)))))
-````
-
 ### Generic functions
 
 The standard library defines the functions `new-generic` and `implement` for using generic functions.
