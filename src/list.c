@@ -11,6 +11,34 @@ List* alloc_list()
     return list;
 }
 
+Node* list_nth_node(List* lst, int index)
+{
+    Node* current = lst->first;
+    for (int i = 0; i < index; i++)
+	current = current->next;
+    return current;
+}
+
+void list_delete(List* lst, int index)
+{
+    Node* current = lst->first;
+    Node* last;
+    int i;
+    if (index == 0)
+	lst->first = current->next;
+    else {
+	for (i = 0; i < index; i++) {
+	    last = current;
+	    current = current->next;
+	}
+	last->next = current->next;
+    }
+    if (i == lst->length - 1)
+	lst->last = last;
+    list_node_free(current);
+    lst->length--;
+}
+
 List* list_copy(List* source)
 {
     List* new = alloc_list();
@@ -26,7 +54,7 @@ void list_copy_new(List* dest, List* source)
 {
     Node* current = source->first;
     for (int i = 0; i < source->length; i++) {
-	if (!list_find(dest, current->value))
+	if (list_find(dest, current->value) == -1)
 	    list_append(dest, current->value);
 	current = current->next;
     }
@@ -49,21 +77,36 @@ void list_append(List* list, Value* new_item)
 
 int list_find(List* list, Value* item)
 {
-    if (list->length == 0) return 0;
+    if (list->length == 0) return -1;
     Node* current = list->first;
     for (int i = 0; i < list->length; i++) {
 	if (compare_values(current->value, item)) return i;
 	current = current->next;
     }
-    return 0;
+    return -1;
+}
+
+void list_node_free(Node* node)
+{
+    free(node->value);
+    free(node);
 }
 
 void list_destruct(List* list)
 {
     Node* current = list->first;
     for (int i = 0; i < list->length; i++) {
-	free(current->value);
-	free(current);
+        list_node_free(current);
     }
     free(list);
+}
+
+List list_pop(List* list)
+{
+    List new_head = {
+	list->length - 1,
+	list->first->next,
+	list->last
+    };
+    return new_head;
 }

@@ -6,8 +6,11 @@
 #define TYPE_ERROR 5
 #define TYPE_OPERATOR 6
 
+extern const char* type_names[];
+
 #define PROCEDURE_PRIMITIVE 0
 #define PROCEDURE_LAMBDA 1
+#define PROCEDURE_VARLAMBDA 2
 
 typedef struct {
     int type;
@@ -28,7 +31,8 @@ typedef struct
 } List;
 
 typedef struct {
-    int type;
+    unsigned char type;
+    unsigned char args;
     List* environment;
     List* free_variables;
     void* code;
@@ -51,7 +55,7 @@ Value* environment_lookup(List*, char*);
 Value* alloc_value(int, void*);
 Binding* alloc_binding(Value*, Value*);
 List* alloc_binding_list(List*, List*);
-Procedure* alloc_procedure(List*, Value*, List*);
+Procedure* alloc_procedure(List*, Value*, List*, int);
 Value* apply(Procedure*, List*, List*);
 Value* eval(Value*, List*);
 List* setup_environment();

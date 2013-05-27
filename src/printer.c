@@ -32,6 +32,11 @@ void value_print(Value* value)
 	printf(")");
 	break;
     }
+    case TYPE_BINDING: {
+	printf("%s -> ", ((Binding*)value->data)->symbol); 
+	value_print(((Binding*)value->data)->value); printf("\n");
+    }
+	break;
     }
 }
 

@@ -27,6 +27,7 @@ Operator operators[] = {
     {"SET!", 2, {NO_EVAL, EVAL}, &operator_set},
     {"LET", 2, {NO_EVAL, NO_EVAL}, &operator_let},
     {"DO", 0, {}, &operator_prog},
+    {":", 0, {}, &operator_prog},
     {"COND", 0, {}, &operator_cond},
     //{"EVAL", 1, {EVAL}, &operator_eval}
 };
@@ -34,7 +35,7 @@ Operator operators[] = {
 Value* apply_operator(Operator* operator, List* arguments, List* environment)
 {
     Node* current_arg = arguments->first;
-    List evaluated_args = {0, NULL, NULL};
+    List evaluated_args = {};
     if (operator->num_arguments != 0 && operator->num_arguments != arguments->length) 
 	return alloc_value(TYPE_ERROR, "wrong number of arguments for operator");
     for (int i = 0; i < arguments->length; i++) {
@@ -84,8 +85,24 @@ Value* operator_lambda(List* arguments, List* environment)
     Value* code = arguments->first->next->value;
 	
     if (arglist->type != TYPE_LIST)
-	return alloc_value(TYPE_ERROR, "LAMBDA: malformed argument list");
-    return alloc_value(TYPE_PROCEDURE, alloc_procedure(arglist->data, code, environment));
+	return alloc_value(TYPE_ERROR, "LAMBDA: no argument list");
+    Value ellipsis;
+    List* arglst = (List*)arglist->data;
+    ellipsis.type = TYPE_SYMBOL;
+    ellipsis.data = "..";
+    int index; 
+    int type = PROCEDURE_LAMBDA;
+    // If we find an ellipsis, check if it's correctly placed:
+    if ((index = list_find(arglst, &ellipsis)) != -1) {
+	if (index == arglst->length - 2) {
+	    // if so, it will be a procedure of type TYPE_VARIABLE_LAMBDA, and we simply remove the ..
+	    type = PROCEDURE_VARLAMBDA;
+	    list_delete(arglst, index);
+	}
+	else 
+	    return alloc_value(TYPE_ERROR, "LAMBDA: malformed argument list");
+    }	
+    return alloc_value(TYPE_PROCEDURE, alloc_procedure(arglist->data, code, environment, type));
 }
 
 Value* operator_set(List* arguments, List* environment)
@@ -120,13 +137,9 @@ Value* operator_let(List* arguments, List* environment)
 	    if (def->length != 2 || def->first->value->type != TYPE_SYMBOL)
 		return alloc_value(TYPE_ERROR, "LET: malformed binding list");
 	    list_append(&variable_names, alloc_value(TYPE_SYMBOL, def->first->value->data));
-	    list_append(&initial_values, eval(def->first->next->value, environment));
+	    list_append(&initial_values, def->first->next->value);
 	}
-	else if (current->value->type == TYPE_SYMBOL) {
-	    list_append(&variable_names, current->value);
-	    list_append(&initial_values, alloc_value(TYPE_SYMBOL, "NIL"));
-	}
-	else return alloc_value(TYPE_ERROR, "LET: expected symbol or list in binding list");
+	else return alloc_value(TYPE_ERROR, "LET: expected list in binding list");
 	current = current->next;
     }
     // Create an anonymous procedure to perform the local bindings

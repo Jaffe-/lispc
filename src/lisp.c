@@ -5,6 +5,8 @@
 #include "list.h"
 #include "operators.h"
 
+const char* type_names[] = {"INTEGER", "SYMBOL", "LIST", "PROCEDURE", "BINDING", "ERROR", "OPERATOR"};
+
 int compare_values(Value* a, Value* b) 
 {
     // First of all, two values are identical if they point to the same data
@@ -20,7 +22,7 @@ int compare_values(Value* a, Value* b)
 	    return (strcmp((char*)a->data, (char*)b->data) == 0);
 	case TYPE_BINDING:
 	    // Bindings are equal when bound values are equal
-	    return compare_values(((Binding*)a->data)->value, ((Binding*)b->data)->value);
+	    return !strcmp(((Binding*)a->data)->symbol, ((Binding*)b->data)->symbol);
 	case TYPE_PROCEDURE:
 	    // Procedures are generally not equal
 	    return 0;
@@ -97,10 +99,10 @@ List* alloc_binding_list(List* variables, List* values)
     return binding_list;
 }
 
-Procedure* alloc_procedure(List* variables, Value* code, List* parent_environment)
+Procedure* alloc_procedure(List* variables, Value* code, List* parent_environment, int type)
 {
     Procedure* procedure = (Procedure*)malloc(sizeof(Procedure));
-    procedure->type = PROCEDURE_LAMBDA;
+    procedure->type = (unsigned char)type;
     procedure->free_variables = variables;
     procedure->code = code;
     procedure->environment = parent_environment;
@@ -109,25 +111,55 @@ Procedure* alloc_procedure(List* variables, Value* code, List* parent_environmen
 
 Value* apply(Procedure* procedure, List* arguments, List* environment)
 {
+    // If procedure is a LAMBDA or PRIMITIVE, argument and variable list lengths must agree
     if (procedure->type == PROCEDURE_LAMBDA || (procedure->type == PROCEDURE_PRIMITIVE && procedure->free_variables->length != 0)) 
 	if (procedure->free_variables->length != arguments->length) 
 	    return alloc_value(TYPE_ERROR, "procedure given wrong number of arguments");
+
+    // Primitive proceudres are executed by calling the appropriate C function through a function pointer
     if (procedure->type == PROCEDURE_PRIMITIVE) 
 	return ((Value* (*)(List*))procedure->code)(arguments);
+  
+    // If procedure is a VARLAMBDA (.. in parameter list),
+    if (procedure->type == PROCEDURE_VARLAMBDA) {
+	int required_args = procedure->free_variables->length - 1;
+	// Enough arguments supplied?
+	if (arguments->length < required_args)
+	    return alloc_value(TYPE_ERROR, "procedure given too few arguments");
+	else {
+	    // Basically we wrap the rest of the arguments into a new list (destructively): 
+	    List* rest_args = alloc_list();
+	    rest_args->length = arguments->length - required_args;
+	    if (arguments->length != required_args) {
+		rest_args->first = list_nth_node(arguments, required_args);
+		rest_args->last = arguments->last;
+	    }
+	    Node* rest_arg_node = (Node*)malloc(sizeof(Node));
+	    rest_arg_node->value = alloc_value(TYPE_LIST, rest_args);
+	    arguments->length = procedure->free_variables->length;
+	    list_nth_node(arguments, required_args - 1)->next = rest_arg_node;
+	}
+    }
+
+    // Make a new environment where the new bindings are added to the parent environment
     List* new_environment  = alloc_binding_list(procedure->free_variables, arguments);
     list_copy_new(new_environment, procedure->environment);
-    //list_copy_new(new_environment, environment);
+    list_copy_new(new_environment, environment);
+ 
+    // Finally, evaluate the procedure
     return eval(procedure->code, new_environment);
 }
 
 Value* eval(Value* expression, List* environment)
 {
+    //printf("EVAL: "); value_print(expression); printf("\n");
     if (expression->type == TYPE_INTEGER || expression->type == TYPE_ERROR || expression->type == TYPE_PROCEDURE) 
 	return expression;
     if (expression->type == TYPE_SYMBOL && !strcmp(expression->data, "NIL")) 
 	return expression;
     if (expression->type == TYPE_SYMBOL) 
 	return environment_lookup(environment, expression->data);
+    
     if (expression->type == TYPE_LIST) {
 	List* list = (List*)expression->data;
 	if (list->length == 0) 
@@ -142,10 +174,7 @@ Value* eval(Value* expression, List* environment)
 		if (!strcmp(operators[i].name, symbol)) {
 
 		    // Call the operator
-		    List arguments;
-		    arguments.length = list->length - 1;
-		    arguments.first = list->first->next;
-		    arguments.last = list->last;
+		    List arguments = list_pop(list);
 		    return apply_operator(&operators[i], &arguments, environment);
 		}
 	    }
@@ -163,10 +192,7 @@ Value* eval(Value* expression, List* environment)
 
 	// If the first element evaluated to a procedure, apply the procedure to the arguments:
 	if (evaluated_list.first->value->type == TYPE_PROCEDURE) {
-	    List arguments;
-	    arguments.length = evaluated_list.length - 1;
-	    arguments.first = evaluated_list.first->next;
-	    arguments.last = evaluated_list.last;
+	    List arguments = list_pop(&evaluated_list);
 	    return apply((Procedure*)evaluated_list.first->value->data, &arguments, environment);
 	}
 	else 
@@ -180,7 +206,7 @@ void test_repl()
     List* env = setup_environment();
     Value* result;
 
-    FILE* file = fopen("stdlib.lisp", "r");
+    FILE* file = fopen("fibmemo.lisp", "r");
     fseek(file, 0, SEEK_END);
     int size = ftell(file);
     rewind(file);

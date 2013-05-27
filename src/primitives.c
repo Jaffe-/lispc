@@ -26,6 +26,7 @@ Value* primitive_print(List*);
 Value* primitive_apply(List*);
 Value* primitive_minus(List*);
 Value* primitive_multiply(List*);
+Value* primitive_type(List*);
 
 Procedure* alloc_primitive_procedure(Value* (*code) (List*), int num_args)
 {
@@ -65,6 +66,8 @@ List* setup_environment()
     append_primitive_procedure(env, ">=", 2, &primitive_greatereq);
     append_primitive_procedure(env, "-", 0, &primitive_minus);
     append_primitive_procedure(env, "*", 0, &primitive_multiply);
+    append_primitive_procedure(env, "TYPE", 1, &primitive_type);
+
     return env;
 }
 
@@ -227,4 +230,11 @@ Value* primitive_print(List* arguments)
 {
     value_print(arguments->first->value); printf("\n");
     return arguments->first->value;
+}
+
+Value* primitive_type(List* arguments)
+{
+    Value* val = arguments->first->value;
+
+    return alloc_value(TYPE_SYMBOL, type_names[val->type]);
 }
