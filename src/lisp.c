@@ -123,6 +123,7 @@ Value* apply(Procedure* procedure, List* arguments, List* environment)
     // If procedure is a VARLAMBDA (.. in parameter list),
     if (procedure->type == PROCEDURE_VARLAMBDA) {
 	int required_args = procedure->free_variables->length - 1;
+	//printf("VARLAM: %i\n", required_args); //value_print(alloc_value(TYPE_LIST, arguments)); printf("\n");
 	// Enough arguments supplied?
 	if (arguments->length < required_args)
 	    return alloc_value(TYPE_ERROR, "procedure given too few arguments");
@@ -136,8 +137,11 @@ Value* apply(Procedure* procedure, List* arguments, List* environment)
 	    }
 	    Node* rest_arg_node = (Node*)malloc(sizeof(Node));
 	    rest_arg_node->value = alloc_value(TYPE_LIST, rest_args);
-	    arguments->length = procedure->free_variables->length;
-	    list_nth_node(arguments, required_args - 1)->next = rest_arg_node;
+	    arguments->length = procedure->free_variables->length; 
+	    if (required_args == 0) 
+		arguments->first = rest_arg_node;
+	    else 
+		list_nth_node(arguments, required_args - 1)->next = rest_arg_node;
 	}
     }
 
@@ -206,17 +210,14 @@ void test_repl()
     List* env = setup_environment();
     Value* result;
 
-    FILE* file = fopen("fibmemo.lisp", "r");
+    FILE* file = fopen("stdlib.lisp", "r");
     fseek(file, 0, SEEK_END);
     int size = ftell(file);
     rewind(file);
     fread(expression, 1, size, file);
     expression[size] = 0;
     strip_spaces(expression);
-    printf("%s", expression);
     result = eval(parse_string(expression), env);
-    value_print(result);
-    printf("\n");
     
     while(1) {
 	printf("LISP> ");

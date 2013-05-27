@@ -67,7 +67,7 @@ Value* parse_string(char* string)
     Value* value;
     if (check_quote(string)) {
 	List* quote_exp = alloc_list();
-	list_append(quote_exp, alloc_value(TYPE_SYMBOL, "'"));
+	list_append(quote_exp, alloc_value(TYPE_SYMBOL, "QUOTE"));
 	list_append(quote_exp, parse_string(string+1));
 	value = alloc_value(TYPE_LIST, quote_exp);
     }
@@ -75,9 +75,8 @@ Value* parse_string(char* string)
 	value = alloc_value(TYPE_INTEGER, allocate_integer(atoi(string)));	
     else if (check_symbol(string)) 
 	value = alloc_value(TYPE_SYMBOL, string_uppercase(string));
-    else if (check_list(string))
+    else if (check_list(string)) 
 	value = alloc_value(TYPE_LIST, parse_list_string(string));
-
     else
 	value = alloc_value(TYPE_ERROR, "Parse error!");		
     return value;
@@ -85,8 +84,10 @@ Value* parse_string(char* string)
 
 void list_append_parsed_string(List* list, char* string, int start, int end)
 {
-    char* element = (char*)malloc(sizeof(char) * (end - start));
-    strncpy(element, string + start, end - start);
+    int length = end - start;
+    char* element = (char*)malloc(sizeof(char) * (length + 1));
+    strncpy(element, string + start, length);
+    element[length] = 0;
     list_append(list, parse_string(element));
 }
 

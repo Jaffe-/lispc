@@ -39,6 +39,18 @@ void list_delete(List* lst, int index)
     lst->length--;
 }
 
+List* list_copy_omit(List* lst, int index)
+{
+    List* new = alloc_list();
+    Node* current = lst->first;
+    for (int i = 0; i < lst->length; i++) {
+	if (i != index) 
+	    list_append(new, current->value);
+	current = current->next;
+    }
+    return new;
+}
+
 List* list_copy(List* source)
 {
     List* new = alloc_list();

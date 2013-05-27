@@ -51,21 +51,21 @@ List* setup_environment()
     List* env = alloc_list();
 
     // fill up 'em procedures ...
-    append_primitive_procedure(env, "+", 0, &primitive_plus);
+    append_primitive_procedure(env, "_+", 0, &primitive_plus);
     append_primitive_procedure(env, "=", 0, &primitive_eq);
     append_primitive_procedure(env, "LIST", 0, &primitive_list);
-    append_primitive_procedure(env, "FIRST", 1, &primitive_first);
-    append_primitive_procedure(env, "REST", 1, &primitive_rest);
-    append_primitive_procedure(env, "PUSH", 2, &primitive_push);
-    append_primitive_procedure(env, "%", 2, &primitive_mod);
-    append_primitive_procedure(env, "PRINT", 1, &primitive_print);
+    append_primitive_procedure(env, "_FIRST", 1, &primitive_first);
+    append_primitive_procedure(env, "_REST", 1, &primitive_rest);
+    append_primitive_procedure(env, "_PUSH", 2, &primitive_push);
+    append_primitive_procedure(env, "_%", 2, &primitive_mod);
+    append_primitive_procedure(env, "_PRINT", 1, &primitive_print);
     append_primitive_procedure(env, "APPLY", 2, &primitive_apply);
-    append_primitive_procedure(env, ">", 2, &primitive_greater);
-    append_primitive_procedure(env, "<", 2, &primitive_less);
-    append_primitive_procedure(env, "<=", 2, &primitive_lesseq);
-    append_primitive_procedure(env, ">=", 2, &primitive_greatereq);
-    append_primitive_procedure(env, "-", 0, &primitive_minus);
-    append_primitive_procedure(env, "*", 0, &primitive_multiply);
+    append_primitive_procedure(env, "_>", 2, &primitive_greater);
+    append_primitive_procedure(env, "_<", 2, &primitive_less);
+    append_primitive_procedure(env, "_<=", 2, &primitive_lesseq);
+    append_primitive_procedure(env, "_>=", 2, &primitive_greatereq);
+    append_primitive_procedure(env, "_-", 0, &primitive_minus);
+    append_primitive_procedure(env, "_*", 0, &primitive_multiply);
     append_primitive_procedure(env, "TYPE", 1, &primitive_type);
 
     return env;

@@ -21,7 +21,7 @@ Value* operator_eval(List*, List*);
 
 Operator operators[] = {
     {"IF", 3, {EVAL, NO_EVAL, NO_EVAL}, &operator_if},
-    {"'", 1, {NO_EVAL}, &operator_quote},
+    {"QUOTE", 1, {NO_EVAL}, &operator_quote},
     {"DEF", 2, {NO_EVAL, EVAL}, &operator_define},
     {"\\", 2, {NO_EVAL, NO_EVAL}, &operator_lambda},
     {"SET!", 2, {NO_EVAL, EVAL}, &operator_set},
@@ -75,6 +75,7 @@ Value* operator_define(List* arguments, List* environment)
 
     if (!symbol->type == TYPE_SYMBOL)
 	return alloc_value(TYPE_ERROR, "DEFINE: variable name must be symbolic");
+    
     list_append(environment, alloc_value(TYPE_BINDING, alloc_binding(symbol, value)));
     return symbol;
 }
@@ -97,12 +98,12 @@ Value* operator_lambda(List* arguments, List* environment)
 	if (index == arglst->length - 2) {
 	    // if so, it will be a procedure of type TYPE_VARIABLE_LAMBDA, and we simply remove the ..
 	    type = PROCEDURE_VARLAMBDA;
-	    list_delete(arglst, index);
+	    arglst = list_copy_omit(arglst, index);
 	}
 	else 
 	    return alloc_value(TYPE_ERROR, "LAMBDA: malformed argument list");
     }	
-    return alloc_value(TYPE_PROCEDURE, alloc_procedure(arglist->data, code, environment, type));
+    return alloc_value(TYPE_PROCEDURE, alloc_procedure(arglst, code, environment, type));
 }
 
 Value* operator_set(List* arguments, List* environment)
