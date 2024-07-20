@@ -4,6 +4,7 @@
 #include <ctype.h>
 #include "lisp.h"
 #include "list.h"
+#include "parser.h"
 
 int check_number(char* str) 
 {

@@ -4,6 +4,7 @@
 #include "lisp.h"
 #include "list.h"
 #include "operators.h"
+#include "parser.h"
 
 const char* type_names[] = {"INTEGER", "SYMBOL", "LIST", "PROCEDURE", "BINDING", "ERROR", "OPERATOR"};
 

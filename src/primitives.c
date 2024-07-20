@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "lisp.h"
+#include <stdint.h>
 #include "list.h"
 #include "primitives.h"
+#include <string.h>
 
 #define OPERATION_PLUS 0
 #define OPERATION_MINUS 1
@@ -113,7 +115,7 @@ Value* primitive_eq(List* arguments)
     Node* current_argument = arguments->first;
     for (int i = 0; i < arguments->length - 1; i++) {
 	if (!compare_values(current_argument->value, current_argument->next->value))
-	    return alloc_value(TYPE_SYMBOL, "NIL");
+	    return alloc_value(TYPE_SYMBOL, (void*)"NIL");
 	current_argument = current_argument->next;
     }
     return alloc_value(TYPE_SYMBOL, "T");
@@ -137,12 +139,12 @@ Value* primitive_greater(List* arguments)
 
 Value* primitive_lesseq(List* arguments)
 {
-    return primitive_less(arguments) || primitive_eq(arguments);
+  return (Value*)(intptr_t)((intptr_t)primitive_less(arguments) || (intptr_t)primitive_eq(arguments));
 }
 
 Value* primitive_greatereq(List* arguments)
 {
-    return primitive_greater(arguments) || primitive_eq(arguments);
+  return (Value*)(intptr_t)((intptr_t)primitive_greater(arguments) || (intptr_t)primitive_eq(arguments));
 }
 
 Value* primitive_list(List* arguments)
@@ -236,5 +238,5 @@ Value* primitive_type(List* arguments)
 {
     Value* val = arguments->first->value;
 
-    return alloc_value(TYPE_SYMBOL, type_names[val->type]);
+    return alloc_value(TYPE_SYMBOL, (void*)type_names[val->type]);
 }
